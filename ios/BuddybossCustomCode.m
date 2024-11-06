@@ -8,7 +8,7 @@
 // You can hook into them to initiate your native libraries or run any custom side-effects
 
 // Called inside AppDelegate.m didFinishLaunchingWithOptions method. This should be used to init most native libraries.
-+ (void)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
++ (void)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions withBridge:(RCTBridge *)bridge
 {}
 
 // Called inside AppDelegate.m didFinishLaunchingWithOptions method when rootView is attached to window
@@ -20,5 +20,15 @@
 // See https://reactnative.dev/docs/native-modules-ios for more information
 
 RCT_EXPORT_MODULE()
+
+// This example method can be deleted
+RCT_REMAP_METHOD(multiply,
+                 multiplyWithA:(nonnull NSNumber*)a withB:(nonnull NSNumber*)b
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSNumber *result = @([a floatValue] * [b floatValue]);
+  resolve(result);
+}
 
 @end
