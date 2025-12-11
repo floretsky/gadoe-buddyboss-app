@@ -1,24 +1,43 @@
-import React, { useEffect, useMemo } from 'react';
-import { FlatList, Text, View } from 'react-native';
-// Adjust this import to however your app stores the site URL:
+import React, {
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from 'react';
+import { View, Text, FlatList, ActivityIndicator } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  upcomingEventsFetchRequest,
+} from '../actions/upcomingEventsActions';
 
 const UpcomingEventsBlock = (props) => {
-  const { block, wrapStyle, fontFamilyStyle, colors } = props;
+  const {
+    block,
+    wrapStyle,
+    appBossWrapStyle,
+    fontFamilyStyle,
+    colors,
+  } = props;
 
   const dispatch = useDispatch();
   const lastApiParamsRef = useRef(null);
   const debounceTimeoutRef = useRef(null);
 
-  // Adapt to your reducer name
-  const { events, loading, loaded, errorMessage } = useSelector(
-    (state) => state.upcomingEventsBlock
-  );
+  const {
+    events,
+    loading,
+    loaded,
+    errorMessage,
+  } = useSelector((state) => state.upcomingEventsBlock);
 
+  // Build params from data_source like in the docs
   const apiParams = useMemo(() => {
-    if (!block?.data?.data_source) return null;
+    const ds = block?.data?.data_source;
+    if (!ds || !ds.route) return null;
+
     return {
-      endpoint: `wp-json${block.data.data_source.route}`,
-      ...block.data.data_source.request_params,
+      endpoint: `wp-json${ds.route}`, // e.g. wp-json/gadoe/v1/upcoming-events
+      ...(ds.request_params || {}),
     };
   }, [
     block?.data?.data_source?.route,
@@ -34,7 +53,7 @@ const UpcomingEventsBlock = (props) => {
     if (!apiParams) return;
 
     if (lastApiParamsRef.current === apiParamsString) {
-      return;
+      return; // already fetched
     }
 
     if (debounceTimeoutRef.current) {
@@ -59,25 +78,45 @@ const UpcomingEventsBlock = (props) => {
     };
   }, [apiParams, apiParamsString, fetchEvents]);
 
-  const renderItem = ({ item }) => {
-    const title =
-      item.title?.rendered || item.post_title || item.title || 'Untitled event';
+  const renderItem = useCallback(
+    ({ item }) => {
+      const title =
+        item.title?.rendered ||
+        item.post_title ||
+        item.title ||
+        'Untitled event';
 
-    const date = item.start_date || item._start_date || '';
+      const date =
+        item._start_date ||
+        item.start_date ||
+        item.event_date ||
+        item.date ||
+        '';
 
-    return (
-      <View style={{ marginBottom: 8 }}>
-        <Text style={[{ fontWeight: '600' }, fontFamilyStyle]}>{title}</Text>
-        {!!date && <Text style={fontFamilyStyle}>{date}</Text>}
-      </View>
-    );
-  };
+      return (
+        <View style={{ marginBottom: 8 }}>
+          <Text style={[{ fontWeight: '600' }, fontFamilyStyle]}>
+            {title}
+          </Text>
+          {!!date && (
+            <Text style={fontFamilyStyle}>{date}</Text>
+          )}
+        </View>
+      );
+    },
+    [fontFamilyStyle]
+  );
 
-  const keyExtractor = (item, index) =>
-    item.id?.toString() || item.ID?.toString() || `event-${index}`;
+  const keyExtractor = useCallback(
+    (item, index) =>
+      item.id?.toString() ||
+      item.ID?.toString() ||
+      `event-${index}`,
+    []
+  );
 
   return (
-    <View style={[{ padding: 16 }, wrapStyle]}>
+    <View style={[{ padding: 16 }, appBossWrapStyle, wrapStyle]}>
       {block?.data?.title && (
         <Text
           style={[
@@ -94,17 +133,19 @@ const UpcomingEventsBlock = (props) => {
         </Text>
       )}
 
-      {loading && !loaded && <Text style={fontFamilyStyle}>Loading…</Text>}
+      {loading && <ActivityIndicator />}
 
-      {!!errorMessage && (
-        <Text style={[{ color: 'red' }, fontFamilyStyle]}>{errorMessage}</Text>
+      {!!errorMessage && !loading && (
+        <Text style={[{ color: 'red', marginTop: 8 }, fontFamilyStyle]}>
+          {errorMessage}
+        </Text>
       )}
 
-      {loaded && !loading && (!events || events.length === 0) && (
+      {!loading && !errorMessage && loaded && events?.length === 0 && (
         <Text style={fontFamilyStyle}>No upcoming events.</Text>
       )}
 
-      {events && events.length > 0 && (
+      {events?.length > 0 && (
         <FlatList
           data={events}
           renderItem={renderItem}
