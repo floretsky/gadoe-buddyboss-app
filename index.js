@@ -8,4 +8,9 @@ export const applyCustomCode = (externalCodeSetup) => {
     'SignupScreen',
     RegistrationScreen
   );
+
+  externalCodeSetup.blocksApi.addCustomBlockRender(
+    'bbapp/upcoming-events',
+    (props) => <UpcomingEventsBlock {...props} />
+  );
 };
