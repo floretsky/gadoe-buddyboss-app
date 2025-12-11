@@ -1,4 +1,4 @@
-const getBaseUrl = () => {
+export const getBaseUrl = () => {
   return 'https://community.gadoe.org';
 };
 

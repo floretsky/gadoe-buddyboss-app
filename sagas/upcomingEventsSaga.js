@@ -6,7 +6,7 @@ import {
   upcomingEventsFetchSuccess,
   upcomingEventsFetchFailed,
 } from '../actions/upcomingEventsActions';
-import { apiFetch } from '../utils/api'; // <- our helper
+import { apiFetch } from '../utils/api'; 
 
 function* doUpcomingEventsFetch({ params }) {
   try {

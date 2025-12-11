@@ -1,9 +1,10 @@
 import React from 'react';
 import { View } from 'react-native';
 import PageScreen from '@src/containers/Custom/PageScreen';
+import { getBaseUrl } from '../utils/api';
 
 const RegistrationScreen = (props) => {
-  const link = 'https://community.gadoe.org/gadoe-community-registration/';
+  const link = getBaseUrl() + '/gadoe-community-registration/';
   const label = 'Create an Account - GaDOE Community';
 
   return (
